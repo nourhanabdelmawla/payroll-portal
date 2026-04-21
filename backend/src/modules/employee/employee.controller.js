@@ -100,21 +100,26 @@ exports.getAllEmployees = async (req, res)=>{
 };
 
 
-//  Employee action
+// get latest employee salary slip
+
 exports.getSalarySlip = async (req, res) => {
   try {
-    const token = req.query.token;
+    const { token } = req.query; // استخدم Destructuring لشكل أنظف
 
-    if (!token) {
-      return res.status(400).json({ message: "Token required" });
-    }
-
+    // نعتمد على الـ Service في الـ Validation لتقليل التكرار
     const result = await employeeService.getSalaryByToken(token);
 
-    res.json(result);
+    // يفضل جلب الـ Base URL من config أو env
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
+    res.json({
+      ok: true,
+      ...result,
+      downloadLink: `${baseUrl}/api/admin/salaries/download/${result.slipId}?token=${token}`
+    });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    // هنا الـ err.message ستكون هي الرسالة التي رميناها في الـ Service
+    res.status(400).json({ ok: false, message: err.message });
   }
 };
-
 
