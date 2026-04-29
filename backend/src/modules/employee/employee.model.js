@@ -1,13 +1,13 @@
 
-
 const mongoose = require('mongoose');
 
+
 const employeeSchema = new mongoose.Schema({
-  employeeId: { type: String, required: true, unique: true },
+  employeeId: { type: Number, required: true, unique: true },
   name: String,
-  token: { type: String, required: true, unique: true },
+  phone: { type: String, required: true},
+  password: { type: String, required: true },
   isActive: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model('Employee', employeeSchema);
-

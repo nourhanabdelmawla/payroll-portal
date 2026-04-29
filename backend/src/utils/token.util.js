@@ -1,6 +1,6 @@
 
-const crypto = require('crypto');
+// const crypto = require('crypto');
 
-exports.generateToken = () => {
-  return crypto.randomBytes(20).toString('hex');
-};
+// exports.generateToken = () => {
+//   return crypto.randomBytes(20).toString('hex');
+// };

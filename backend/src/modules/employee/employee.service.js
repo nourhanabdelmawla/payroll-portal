@@ -1,27 +1,28 @@
-const Employee = require('./employee.model');
+//employee sevice
+
+//const Employee = require('./employee.model');
+
+
 const SalarySlip = require('../salarySlip/salarySlip.model');
 
-exports.getSalaryByToken = async (token) => {
-  
-  if (!token) throw  new Error('Employee token is required');
-  
+exports.getSalaryByEmployeeId = async (mongoId) => {
+  if (!mongoId) throw new Error('Employee identifier is missing');
 
-  const employee = await Employee.findOne({ token, isActive: true }).select('name');
-  if (!employee) throw new Error('the link is not true or expierd');
+  const slip = await SalarySlip.findOne({ employeeId: mongoId })
+    .sort({ uploadedAt: -1 });
 
-  //to find the latest salary slip
-  const slip = await SalarySlip.findOne({ employeeId: employee._id })
-    .sort({ uploadedAt: -1 }); 
+  if (!slip) {
+    throw new Error('No salary slip available');
+  }
 
-  if (!slip) throw new Error ('There are no payroll statements currently available.ا');
-
-  return { 
-    employeeName: employee.name,
+  return {
+    _id: slip._id, // 👈 مهم جدًا
     month: slip.month,
-    slipId: slip._id 
+    filePath: slip.filePath,
+    originalName: slip.originalName,
+    uploadedAt: slip.uploadedAt
   };
 };
-
 
 // const Employee = require('./employee.model');
 // const SalarySlip = require('../salarySlip/salarySlip.model');

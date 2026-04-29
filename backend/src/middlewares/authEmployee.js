@@ -1,55 +1,23 @@
-const Employee = require("../modules/employee/employee.model.js");
+const jwt = require("jsonwebtoken");
 
 const authEmployee = async (req, res, next) => {
   try {
-    let token = null;
-
-    // from header
-    if (req.headers.authorization) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-
-    // from query
-    if (!token && req.query.token) {
-      token = req.query.token;
-    }
+    let token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({
-        ok: false,
-        message: "No token provided",
-      });
+      return res.status(401).json({ ok: false, message: "please log in first" });
     }
 
-    const employee = await Employee.findOne({ token }).lean();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!employee) {
-      return res.status(401).json({
-        ok: false,
-        message: "Invalid token",
-      });
-    }
-
-    if (!employee.isActive) {
-      return res.status(403).json({
-        ok: false,
-        message: "Employee inactive",
-      });
-    }
-
-    // attach user to request
     req.user = {
-      employeeId: employee._id,
-      empCode: employee.employeeId,
-      name: employee.name,
+      employeeId: decoded.employeeId,
+      empCode: decoded.empCode
     };
 
     next();
   } catch (err) {
-    return res.status(500).json({
-      ok: false,
-      message: err.message,
-    });
+    return res.status(401).json({ ok: false, message: "the session has been ended please log in again" });
   }
 };
 
