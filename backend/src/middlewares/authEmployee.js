@@ -1,88 +1,66 @@
+const Employee = require("../modules/employee/employee.model");
 const jwt = require("jsonwebtoken");
+
+
+
 
 const authEmployee = async (req, res, next) => {
   try {
     let token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ ok: false, message: "please log in first" });
+      return res.status(401).json({
+        ok: false,
+        message: "Access denied. Please log in first."
+      });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    const employee = await Employee.findById(decoded.employeeId);
+
+    if (!employee) {
+      return res.status(401).json({
+        ok: false,
+        message: "Employee not found"
+      });
+    }
+
     req.user = {
-      employeeId: decoded.employeeId,
-      empCode: decoded.empCode
+      employeeId: employee._id,
+      empCode: employee.employeeId
     };
 
     next();
+
   } catch (err) {
-    return res.status(401).json({ ok: false, message: "the session has been ended please log in again" });
+    return res.status(401).json({
+      ok: false,
+      message: "Session expired. Please log in again."
+    });
   }
 };
 
 module.exports = authEmployee;
 
 
-// const jwt = require ("jsonwebtoken");
-// const Employee = require ("../modules/employee/employee.model.js");
-
 // const authEmployee = async (req, res, next) => {
 //   try {
-//     // employye link posible  from header or query
-//     let token = null;
-
-//     if (req.headers.authorization) {
-//       token = req.headers.authorization.split(" ")[1];
-//     }
-
-//     if (!token && req.query.token) {
-//       token = req.query.token;
-//     }
-
+//     let token = req.headers.authorization?.split(" ")[1];
 //     if (!token) {
-//       return res.status(401).json({
-//         ok: false,
-//         message: "No token provided",
-//       });
+//       return res.status(401).json({ ok: false, message: "Access denied. Please log in first." });
 //     }
 
-//     // decode token
 //     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-//     // get employee from db
-//     const employee = await Employee.findById(decoded.employeeId).lean();
-
-//     if (!employee) {
-//       return res.status(401).json({
-//         ok: false,
-//         message: "Employee not found",
-//       });
-//     }
-
-//     if (!employee.isActive) {
-//       return res.status(403).json({
-//         ok: false,
-//         message: "Employee inactive",
-//       });
-//     }
-
-//     // add employree data to req
+//     //console.log("decoded =", decoded);
 //     req.user = {
-//       employeeId: employee._id,
-//       empCode: employee.empCode,
-//       name: employee.name,
+//       employeeId: decoded.employeeId,
+//       empCode: decoded.empCode
 //     };
-
 //     next();
 //   } catch (err) {
-//     return res.status(401).json({
-//       ok: false,
-//       message: "Invalid token",
-//     });
+//     return res.status(401).json({ ok: false, message: "Session expired. Please log in again." });
 //   }
 // };
-
-
-
 // module.exports = authEmployee;
+

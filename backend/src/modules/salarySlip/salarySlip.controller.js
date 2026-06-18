@@ -1,4 +1,3 @@
-//salary slip controller
 const unzipper = require ("unzipper");
 const fs = require ("fs");
 const path = require ("path");

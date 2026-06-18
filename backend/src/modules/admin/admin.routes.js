@@ -9,10 +9,14 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 router.post('/login', login);
+router.get('/employee-link/:id', authAdmin, controller.generateDirectLink);
+
 
 router.post('/addEmployee', authAdmin, controller.addNewEmployee);
 router.post('/bulk', authAdmin, upload.single('file'), controller.bulkCreateEmployees);
 router.get('/list', authAdmin, controller.getAllEmployees);
+router.delete('/deleteEmployee/:id', authAdmin, controller.deleteEmployee);
+
 
 
 module.exports = router;

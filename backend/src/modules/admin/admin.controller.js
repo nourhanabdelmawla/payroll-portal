@@ -1,58 +1,68 @@
 
-
 const Admin = require('./admin.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Employee = require('../employee/employee.model');
+const ExcelJS = require('exceljs');
+const tokenUtil = require('../../utils/token.util');
+const passwordUtil = require('../../utils/password.util');
 
+
+//direct link
+exports.generateDirectLink = async (req, res) => {
+  try {
+    const pToken = await tokenUtil.getOrCreatePermanentToken(req.params.id);
+
+    res.json({
+      ok: true,
+      link: `http://localhost:5173/direct-login?pToken=${pToken}`
+    });
+  } catch (err) {
+    res.status(400).json({ ok: false, message: err.message });
+  }
+};
+
+
+//admin login
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { adminId: admin._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.json({ token });
-  }catch (err) {
-    console.error(" ERROR DETAILS:", err); 
-    res.status(500).json({ message: err.message });
+  const admin = await Admin.findOne({ email });
+  if (!admin) {
+    return res.status(401).json({ message: 'Invalid credentials' });
   }
+
+  const isMatch = await bcrypt.compare(password, admin.password);
+  if (!isMatch) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+
+  const token = jwt.sign(
+    { adminId: admin._id },
+    process.env.JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+
+  res.json({ token });
+} catch (err) {
+  console.error(" ERROR DETAILS:", err);
+  res.status(500).json({ message: err.message });
+}
   // } catch (err) {
   //   res.status(500).json({ message: 'Server error' });
   // }
 };
 
 
-const Employee = require('../employee/employee.model');
-const crypto = require('crypto');
-const ExcelJS = require('exceljs');
 
-const generateStrongPassword = (length = 12) => {
-  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-  let password = "";
-  const bytes = crypto.randomBytes(length);
-  for (let i = 0; i < length; i++) {
-    password += charset[bytes[i] % charset.length];
-  }
-  return password;
-};
 
-exports.addNewEmployee = async(req, res) => {
+
+
+exports.addNewEmployee = async (req, res) => {
   try {
     const { employeeId, name, phone, password } = req.body;
-    if(!employeeId || !name ||!phone ||!password) return res.status(400).json({ message: "missed data" });
+    if (!employeeId || !name || !phone || !password) return res.status(400).json({ message: "missed data" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -65,7 +75,8 @@ exports.addNewEmployee = async(req, res) => {
     });
 
     res.json({
-      message: "Employee has been added successfully"});
+      message: "Employee has been added successfully"
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -86,14 +97,14 @@ exports.bulkCreateEmployees = async (req, res) => {
 
     const promises = [];
     worksheet.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) return; 
+      if (rowNumber === 1) return;
 
       const employeeId = String(row.getCell(1).value);
       const name = row.getCell(2).value;
       const phone = String(row.getCell(3).value);
 
-      const plainPassword = generateStrongPassword();
-      
+      const plainPassword = passwordUtil.generateStrongPassword();
+
       resultsForAdmin.push({ employeeId, name, phone, password: plainPassword });
 
       promises.push(
@@ -110,7 +121,7 @@ exports.bulkCreateEmployees = async (req, res) => {
     });
 
     await Promise.all(promises);
-    
+
     await Employee.insertMany(dataToSave);
 
     const outWorkbook = new ExcelJS.Workbook();
@@ -146,11 +157,27 @@ exports.bulkCreateEmployees = async (req, res) => {
 };
 
 
-exports.getAllEmployees = async (req, res)=>{
+exports.getAllEmployees = async (req, res) => {
   try {
     const employees = await Employee.find().sort({ employeeId: 1 });
     res.json(employees);
   } catch (err) {
-    res.status(500).json({message:err.message});
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+//delete employee
+exports.deleteEmployee = async (req, res) => {
+  const employeeId = req.params.id;
+  try {
+    await Employee.findByIdAndDelete(employeeId);
+    res.status(200).json({
+      message: 'Employee deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
   }
 };

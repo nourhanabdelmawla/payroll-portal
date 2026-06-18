@@ -14,10 +14,10 @@ app.use(express.json());
 
 const employeeRoutes = require('./modules/employee/employee.routes');
 const adminRoutes = require('./modules/admin/admin.routes')
-const salaryRoutes= require('./modules/salarySlip/salarySlip.routes')
+const salaryRoutes = require('./modules/salarySlip/salarySlip.routes')
 // Employee API
 
 app.use('/api/admin/auth', adminRoutes);
-app.use('/api/admin/salaries', salaryRoutes);
+app.use('/api/salaries', salaryRoutes);
 app.use('/api/employees', employeeRoutes);
 module.exports = app;
